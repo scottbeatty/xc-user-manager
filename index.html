@@ -1,90 +1,516 @@
-$lbHost = "ves-io-5bcd374c-9ef9-427f-b3e8-422fcef2800b.ac.vh.ves.io"
-
-Write-Host ""
-Write-Host "=== TEST 1: Does HTTPS work on the LB? ==="
-
-try {
-  $r = Invoke-WebRequest `
-    -Uri "https://$lbHost/" `
-    -Method GET -UseBasicParsing
-  Write-Host "  HTTPS HTTP $($r.StatusCode) - WORKS!" -ForegroundColor Green
-} catch {
-  $status = "???"
-  try { $status = [int]$_.Exception.Response.StatusCode } catch {}
-  if ($status) {
-    Write-Host "  HTTPS HTTP $status (reachable, may work)" -ForegroundColor Green
-  } else {
-    Write-Host "  HTTPS failed: $($_.Exception.Message)" -ForegroundColor Yellow
-  }
-}
-
-Write-Host ""
-Write-Host "=== TEST 2: HTTPS API call ==="
-
-$prodTokenSecure = Read-Host "acmecorp Production API Token" -AsSecureString
-$pt = (New-Object System.Net.NetworkCredential("", $prodTokenSecure)).Password
-
-try {
-  $r = Invoke-WebRequest `
-    -Uri "https://$lbHost/api/web/custom/namespaces/system/user_roles" `
-    -Method GET `
-    -Headers @{ Authorization = "APIToken $pt" } `
-    -UseBasicParsing
-  Write-Host "  HTTP $($r.StatusCode) - PROXY WORKS OVER HTTPS!" -ForegroundColor Green
-  $data = $r.Content | ConvertFrom-Json
-  Write-Host "  Users: $($data.items.Count)"
-} catch {
-  $status = "???"; $errBody = ""
-  try {
-    $resp = $_.Exception.Response
-    if ($resp) {
-      $status = [int]$resp.StatusCode
-      $stream = $resp.GetResponseStream()
-      $reader = New-Object System.IO.StreamReader($stream)
-      $errBody = $reader.ReadToEnd()
-      $reader.Close(); $stream.Close()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F5 XC User Manager</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      color: #333;
     }
-  } catch {}
-  Write-Host "  HTTP $status" -ForegroundColor Yellow
-  if ($errBody) { Write-Host "  $($errBody.Substring(0, [Math]::Min(300, $errBody.Length)))" }
+    h1 {
+      text-align: center;
+      color: #0066cc;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      margin: 20px 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin: 14px 0 6px;
+      color: #444;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin: 20px 0 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,102,204,0.4);
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .status {
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 16px 0;
+      display: none;
+      font-weight: 500;
+    }
+    .status.info { display: block; background: #e7f3ff; color: #004085; border-left: 4px solid #0066cc; }
+    .status.success { display: block; background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+    .status.error { display: block; background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+    .pbar {
+      width: 100%;
+      height: 24px;
+      background: #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 16px 0;
+      display: none;
+    }
+    .pfill {
+      height: 100%;
+      background: linear-gradient(90deg, #0066cc, #00aaff);
+      transition: width 0.3s ease;
+      width: 0%;
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    th {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      padding: 12px 10px;
+      text-align: left;
+      border: 1px solid #dee2e6;
+      font-weight: 600;
+    }
+    td {
+      padding: 10px;
+      border: 1px solid #dee2e6;
+      word-break: break-all;
+    }
+    tr:nth-child(even) td { background: #f8f9fa; }
+    tr:hover td { background: #e7f3ff; }
+    h3 { margin-top: 24px; }
+    ul { padding-left: 20px; }
+    li { padding: 4px 0; }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #666;
+      font-size: 13px;
+    }
+    .proxy-note {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: -10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>F5 XC User Manager</h1>
+
+  <div class="card">
+    <label>Tenant Name</label>
+    <input type="text" id="tenant" placeholder="e.g. acmecorp" value="acmecorp">
+
+    <label>API Token</label>
+    <input type="password" id="token" placeholder="Paste your XC API token with user management permissions">
+
+    <button onclick="connect()">Connect & Load Groups</button>
+  </div>
+
+  <div class="card" id="actions" style="display:none;">
+    <label>Action</label>
+    <select id="action" onchange="onActionChange()">
+      <option value="create">Create new users</option>
+      <option value="rotate">Rotate passwords (delete old + create new)</option>
+      <option value="delete">Delete all generated users</option>
+    </select>
+
+    <div id="countRow">
+      <label>Number of Users</label>
+      <input type="number" id="count" value="10" min="1" max="200">
+    </div>
+
+    <div id="groupRow">
+      <label>User Group</label>
+      <select id="group"></select>
+    </div>
+
+    <button id="runBtn" onclick="run()">Run</button>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div class="pbar" id="pbar"><div class="pfill" id="pfill"></div></div>
+  <div id="results"></div>
+
+  <div class="footer">
+    Proxy: ves-io-5bcd374c-9ef9-427f-b3e8-422fcef2800b.ac.vh.ves.io
+  </div>
+
+<script>
+// ============================================================
+// Configuration
+// ============================================================
+const PROXY_URL = "http://ves-io-5bcd374c-9ef9-427f-b3e8-422fcef2800b.ac.vh.ves.io";
+
+let currentTenant = "";
+let currentToken = "";
+
+// ============================================================
+// UI Helpers
+// ============================================================
+function setStatus(msg, type) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status " + type;
 }
 
-Write-Host ""
-Write-Host "=== TEST 3: HTTPS CORS preflight ==="
-
-try {
-  $r = Invoke-WebRequest `
-    -Uri "https://$lbHost/api/web/custom/namespaces/system/user_roles" `
-    -Method OPTIONS `
-    -Headers @{
-      "Origin"                         = "https://scottbeatty.github.io"
-      "Access-Control-Request-Method"  = "POST"
-      "Access-Control-Request-Headers" = "Authorization, Content-Type"
-    } `
-    -UseBasicParsing
-  Write-Host "  OPTIONS: HTTP $($r.StatusCode)" -ForegroundColor Green
-  Write-Host "  CORS headers:"
-  $r.Headers.Keys | Where-Object { $_ -like "*access-control*" } | ForEach-Object {
-    Write-Host "    $_`: $($r.Headers[$_])" -ForegroundColor Cyan
+function setProgress(pct) {
+  const bar = document.getElementById("pbar");
+  const fill = document.getElementById("pfill");
+  if (pct < 0) {
+    bar.style.display = "none";
+    return;
   }
-} catch {
-  $status = "???"
+  bar.style.display = "block";
+  fill.style.width = pct + "%";
+}
+
+function onActionChange() {
+  const action = document.getElementById("action").value;
+  document.getElementById("countRow").style.display = action === "delete" ? "none" : "block";
+  document.getElementById("groupRow").style.display = action === "delete" ? "none" : "block";
+}
+
+// ============================================================
+// API Helper
+// ============================================================
+async function xcFetch(method, path, body) {
+  const url = PROXY_URL + path;
+  const opts = {
+    method,
+    headers: {
+      "Authorization": "APIToken " + currentToken
+    }
+  };
+  if (body) {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  const resp = await fetch(url, opts);
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error("HTTP " + resp.status + ": " + text.substring(0, 200));
+  }
+  return resp.json();
+}
+
+// ============================================================
+// Crypto Helpers
+// ============================================================
+function randomHex8() {
+  const bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function randomPassword(length) {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}:,.?";
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => chars[b % chars.length]).join("");
+}
+
+// ============================================================
+// Connect
+// ============================================================
+async function connect() {
+  currentTenant = document.getElementById("tenant").value.trim().toLowerCase();
+  currentToken = document.getElementById("token").value.trim();
+
+  if (!currentTenant || !currentToken) {
+    setStatus("Please enter tenant name and API token.", "error");
+    return;
+  }
+
+  setStatus("Connecting to " + currentTenant + "...", "info");
+
   try {
-    $resp = $_.Exception.Response
-    if ($resp) {
-      $status = [int]$resp.StatusCode
-      Write-Host "  OPTIONS: HTTP $status" -ForegroundColor Yellow
-      foreach ($key in $resp.Headers.AllKeys) {
-        if ($key -like "*access*" -or $key -like "*cors*") {
-          Write-Host "    $key`: $($resp.Headers[$key])"
-        }
+    const data = await xcFetch("GET", "/api/web/namespaces/system/user_groups");
+    const groups = (data.items || [])
+      .map(g => g.name || (g.metadata && g.metadata.name))
+      .filter(Boolean)
+      .sort();
+
+    if (groups.length === 0) {
+      setStatus("Connected but no user groups found.", "error");
+      return;
+    }
+
+    const sel = document.getElementById("group");
+    sel.innerHTML = "";
+    groups.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      sel.appendChild(opt);
+    });
+
+    document.getElementById("actions").style.display = "block";
+    setStatus("Connected to " + currentTenant + ". " + groups.length + " groups available.", "success");
+  } catch (e) {
+    setStatus("Connection failed: " + e.message, "error");
+  }
+}
+
+// ============================================================
+// Run Action
+// ============================================================
+async function run() {
+  const action = document.getElementById("action").value;
+  const count = parseInt(document.getElementById("count").value) || 10;
+  const group = document.getElementById("group").value;
+  const btn = document.getElementById("runBtn");
+
+  btn.disabled = true;
+  document.getElementById("results").innerHTML = "";
+  setProgress(5);
+
+  try {
+    if (action === "create") {
+      await doCreate(count, group);
+    } else if (action === "rotate") {
+      await doRotate(count, group);
+    } else {
+      await doDelete();
+    }
+  } catch (e) {
+    setStatus("Error: " + e.message, "error");
+  } finally {
+    setProgress(-1);
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// Create Users
+// ============================================================
+async function doCreate(count, group) {
+  setStatus("Creating " + count + " users...", "info");
+  const created = [];
+  const errors = [];
+
+  for (let i = 1; i <= count; i++) {
+    setProgress(Math.round((i - 1) / count * 100));
+
+    const username = "user" + i + "-" + randomHex8();
+    const email = username + "@" + currentTenant + ".local";
+    const password = randomPassword(10);
+
+    try {
+      await xcFetch("POST", "/api/web/custom/namespaces/system/user_roles", {
+        name: email,
+        namespace: "system",
+        type: "USER",
+        first_name: "User",
+        last_name: "" + i,
+        email: email,
+        idm_type: "VOLTERRA_MANAGED",
+        namespace_roles: [],
+        group_names: [group]
+      });
+      created.push({ index: i, username, email, password, group });
+    } catch (e) {
+      errors.push({ email, error: e.message });
+    }
+  }
+
+  setProgress(100);
+  showResults(created, [], errors);
+}
+
+// ============================================================
+// Rotate Passwords (Delete Old + Create New)
+// ============================================================
+async function doRotate(count, group) {
+  setStatus("Finding existing generated users...", "info");
+
+  const pattern = /^user\d+-[a-f0-9]{8}$/;
+  const data = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
+  const oldUsers = (data.items || []).filter(u => {
+    const email = u.email || u.name || "";
+    const uname = email.split("@")[0];
+    return pattern.test(uname);
+  });
+
+  const deleted = [];
+  const created = [];
+  const errors = [];
+  const total = oldUsers.length + count;
+
+  // Delete old users
+  if (oldUsers.length > 0) {
+    setStatus("Deleting " + oldUsers.length + " old users...", "info");
+    for (let i = 0; i < oldUsers.length; i++) {
+      setProgress(Math.round(i / total * 100));
+      const email = oldUsers[i].email || oldUsers[i].name;
+      try {
+        await xcFetch("POST", "/api/web/custom/namespaces/system/users/cascade_delete", {
+          email: email,
+          namespace: "system"
+        });
+        deleted.push(email);
+      } catch (e) {
+        errors.push({ email, error: e.message });
       }
     }
-  } catch {
-    Write-Host "  OPTIONS: $($_.Exception.Message)" -ForegroundColor Yellow
   }
+
+  // Create new users
+  setStatus("Creating " + count + " new users...", "info");
+  for (let i = 1; i <= count; i++) {
+    setProgress(Math.round((oldUsers.length + i - 1) / total * 100));
+
+    const username = "user" + i + "-" + randomHex8();
+    const email = username + "@" + currentTenant + ".local";
+    const password = randomPassword(10);
+
+    try {
+      await xcFetch("POST", "/api/web/custom/namespaces/system/user_roles", {
+        name: email,
+        namespace: "system",
+        type: "USER",
+        first_name: "User",
+        last_name: "" + i,
+        email: email,
+        idm_type: "VOLTERRA_MANAGED",
+        namespace_roles: [],
+        group_names: [group]
+      });
+      created.push({ index: i, username, email, password, group });
+    } catch (e) {
+      errors.push({ email, error: e.message });
+    }
+  }
+
+  setProgress(100);
+  showResults(created, deleted, errors);
 }
 
-Write-Host ""
-Write-Host "If all three pass, just change PROXY_URL to https:// in the HTML."
-Write-Host "Paste full output."
+// ============================================================
+// Delete Users
+// ============================================================
+async function doDelete() {
+  setStatus("Finding generated users...", "info");
+
+  const pattern = /^user\d+-[a-f0-9]{8}$/;
+  const data = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
+  const targets = (data.items || []).filter(u => {
+    const email = u.email || u.name || "";
+    const uname = email.split("@")[0];
+    return pattern.test(uname);
+  });
+
+  if (targets.length === 0) {
+    setStatus("No generated users found.", "info");
+    return;
+  }
+
+  if (!confirm("Delete " + targets.length + " generated users?\n\nThis cannot be undone.")) {
+    setStatus("Cancelled.", "info");
+    return;
+  }
+
+  const deleted = [];
+  const errors = [];
+
+  setStatus("Deleting " + targets.length + " users...", "info");
+  for (let i = 0; i < targets.length; i++) {
+    setProgress(Math.round(i / targets.length * 100));
+    const email = targets[i].email || targets[i].name;
+    try {
+      await xcFetch("POST", "/api/web/custom/namespaces/system/users/cascade_delete", {
+        email: email,
+        namespace: "system"
+      });
+      deleted.push(email);
+    } catch (e) {
+      errors.push({ email, error: e.message });
+    }
+  }
+
+  setProgress(100);
+  showResults([], deleted, errors);
+}
+
+// ============================================================
+// Display Results
+// ============================================================
+function showResults(created, deleted, errors) {
+  let html = "";
+
+  if (created.length > 0) {
+    html += "<h3 style='color:#155724;'>Created Users (" + created.length + ")</h3>";
+    html += "<table>";
+    html += "<tr><th>#</th><th>Email</th><th>Password</th><th>Group</th></tr>";
+    created.forEach(u => {
+      html += "<tr><td>" + u.index + "</td><td>" + u.email + "</td><td><code>" + u.password + "</code></td><td>" + u.group + "</td></tr>";
+    });
+    html += "</table>";
+  }
+
+  if (deleted.length > 0) {
+    html += "<h3 style='color:#856404;'>Deleted Users (" + deleted.length + ")</h3>";
+    html += "<ul>";
+    deleted.forEach(e => {
+      html += "<li>" + e + "</li>";
+    });
+    html += "</ul>";
+  }
+
+  if (errors.length > 0) {
+    html += "<h3 style='color:#721c24;'>Errors (" + errors.length + ")</h3>";
+    html += "<ul>";
+    errors.forEach(e => {
+      html += "<li><strong>" + e.email + "</strong>: " + e.error + "</li>";
+    });
+    html += "</ul>";
+  }
+
+  document.getElementById("results").innerHTML = html;
+
+  const c = created.length, d = deleted.length, e = errors.length;
+  const msg = "Done. Created: " + c + ", Deleted: " + d + ", Errors: " + e;
+  setStatus(msg, e > 0 ? "error" : "success");
+}
+</script>
+</body>
+</html>
