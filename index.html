@@ -15,11 +15,7 @@
       min-height: 100vh;
       color: #333;
     }
-    h1 {
-      text-align: center;
-      color: #0066cc;
-      margin-bottom: 30px;
-    }
+    h1 { text-align: center; color: #0066cc; margin-bottom: 30px; }
     .card {
       background: #fff;
       border-radius: 12px;
@@ -27,12 +23,7 @@
       margin: 20px 0;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-    label {
-      font-weight: 600;
-      display: block;
-      margin: 14px 0 6px;
-      color: #444;
-    }
+    label { font-weight: 600; display: block; margin: 14px 0 6px; color: #444; }
     input, select {
       width: 100%;
       padding: 12px 14px;
@@ -41,10 +32,7 @@
       border-radius: 8px;
       transition: border-color 0.2s;
     }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #0066cc;
-    }
+    input:focus, select:focus { outline: none; border-color: #0066cc; }
     button {
       display: block;
       width: 100%;
@@ -59,90 +47,33 @@
       cursor: pointer;
       transition: transform 0.1s, box-shadow 0.2s;
     }
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,102,204,0.4);
-    }
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    .status {
-      padding: 14px 18px;
-      border-radius: 8px;
-      margin: 16px 0;
-      display: none;
-      font-weight: 500;
-    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,102,204,0.4); }
+    button:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+    .status { padding: 14px 18px; border-radius: 8px; margin: 16px 0; display: none; font-weight: 500; }
     .status.info { display: block; background: #e7f3ff; color: #004085; border-left: 4px solid #0066cc; }
     .status.success { display: block; background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
     .status.error { display: block; background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
-    .pbar {
-      width: 100%;
-      height: 24px;
-      background: #e9ecef;
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 16px 0;
-      display: none;
-    }
-    .pfill {
-      height: 100%;
-      background: linear-gradient(90deg, #0066cc, #00aaff);
-      transition: width 0.3s ease;
-      width: 0%;
-      border-radius: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0;
-      font-size: 13px;
-    }
-    th {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      padding: 12px 10px;
-      text-align: left;
-      border: 1px solid #dee2e6;
-      font-weight: 600;
-    }
-    td {
-      padding: 10px;
-      border: 1px solid #dee2e6;
-      word-break: break-all;
-    }
+    .pbar { width: 100%; height: 24px; background: #e9ecef; border-radius: 12px; overflow: hidden; margin: 16px 0; display: none; }
+    .pfill { height: 100%; background: linear-gradient(90deg, #0066cc, #00aaff); transition: width 0.3s ease; width: 0%; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    th { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 12px 10px; text-align: left; border: 1px solid #dee2e6; font-weight: 600; }
+    td { padding: 10px; border: 1px solid #dee2e6; word-break: break-all; }
     tr:nth-child(even) td { background: #f8f9fa; }
     tr:hover td { background: #e7f3ff; }
     h3 { margin-top: 24px; }
     ul { padding-left: 20px; }
     li { padding: 4px 0; }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: #666;
-      font-size: 13px;
-    }
-    .proxy-note {
-      font-size: 12px;
-      color: #666;
-      text-align: center;
-      margin-top: -10px;
-    }
+    .footer { text-align: center; margin-top: 30px; color: #999; font-size: 12px; }
   </style>
 </head>
 <body>
-
   <h1>F5 XC User Manager</h1>
 
   <div class="card">
     <label>Tenant Name</label>
-    <input type="text" id="tenant" placeholder="e.g. acmecorp" value="acmecorp">
-
+    <input type="text" id="tenant" placeholder="e.g. acmecorp">
     <label>API Token</label>
-    <input type="password" id="token" placeholder="Paste your XC API token with user management permissions">
-
+    <input type="password" id="token" placeholder="Paste your XC API token">
     <button onclick="connect()">Connect & Load Groups</button>
   </div>
 
@@ -153,363 +84,124 @@
       <option value="rotate">Rotate passwords (delete old + create new)</option>
       <option value="delete">Delete all generated users</option>
     </select>
-
     <div id="countRow">
       <label>Number of Users</label>
       <input type="number" id="count" value="10" min="1" max="200">
     </div>
-
     <div id="groupRow">
       <label>User Group</label>
       <select id="group"></select>
     </div>
-
     <button id="runBtn" onclick="run()">Run</button>
   </div>
 
   <div class="status" id="status"></div>
   <div class="pbar" id="pbar"><div class="pfill" id="pfill"></div></div>
   <div id="results"></div>
-
-  <div class="footer">
-    Proxy: ves-io-5bcd374c-9ef9-427f-b3e8-422fcef2800b.ac.vh.ves.io
-  </div>
+  <div class="footer">Powered by Netlify + F5 Distributed Cloud</div>
 
 <script>
-// ============================================================
-// Configuration
-// ============================================================
-const PROXY_URL = "http://ves-io-5bcd374c-9ef9-427f-b3e8-422fcef2800b.ac.vh.ves.io";
+const PROXY = "/.netlify/functions/proxy";
+let currentTenant = "", currentToken = "";
 
-let currentTenant = "";
-let currentToken = "";
+function setStatus(m, t) { const e = document.getElementById("status"); e.textContent = m; e.className = "status " + t; }
+function setProgress(p) { const b = document.getElementById("pbar"), f = document.getElementById("pfill"); if (p < 0) { b.style.display = "none"; return; } b.style.display = "block"; f.style.width = p + "%"; }
+function onActionChange() { const a = document.getElementById("action").value; document.getElementById("countRow").style.display = a === "delete" ? "none" : "block"; document.getElementById("groupRow").style.display = a === "delete" ? "none" : "block"; }
 
-// ============================================================
-// UI Helpers
-// ============================================================
-function setStatus(msg, type) {
-  const el = document.getElementById("status");
-  el.textContent = msg;
-  el.className = "status " + type;
-}
-
-function setProgress(pct) {
-  const bar = document.getElementById("pbar");
-  const fill = document.getElementById("pfill");
-  if (pct < 0) {
-    bar.style.display = "none";
-    return;
-  }
-  bar.style.display = "block";
-  fill.style.width = pct + "%";
-}
-
-function onActionChange() {
-  const action = document.getElementById("action").value;
-  document.getElementById("countRow").style.display = action === "delete" ? "none" : "block";
-  document.getElementById("groupRow").style.display = action === "delete" ? "none" : "block";
-}
-
-// ============================================================
-// API Helper
-// ============================================================
 async function xcFetch(method, path, body) {
-  const url = PROXY_URL + path;
-  const opts = {
-    method,
-    headers: {
-      "Authorization": "APIToken " + currentToken
-    }
-  };
-  if (body) {
-    opts.headers["Content-Type"] = "application/json";
-    opts.body = JSON.stringify(body);
-  }
-  const resp = await fetch(url, opts);
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error("HTTP " + resp.status + ": " + text.substring(0, 200));
-  }
-  return resp.json();
+  const resp = await fetch(PROXY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tenant: currentTenant, token: currentToken, method, path, body })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error);
+  return data;
 }
 
-// ============================================================
-// Crypto Helpers
-// ============================================================
-function randomHex8() {
-  const bytes = new Uint8Array(4);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
-}
+function randomHex8() { const b = new Uint8Array(4); crypto.getRandomValues(b); return Array.from(b).map(x => x.toString(16).padStart(2, "0")).join(""); }
+function randomPassword(n) { const c = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}:,.?"; const b = new Uint8Array(n); crypto.getRandomValues(b); return Array.from(b).map(x => c[x % c.length]).join(""); }
 
-function randomPassword(length) {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}:,.?";
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map(b => chars[b % chars.length]).join("");
-}
-
-// ============================================================
-// Connect
-// ============================================================
 async function connect() {
   currentTenant = document.getElementById("tenant").value.trim().toLowerCase();
   currentToken = document.getElementById("token").value.trim();
-
-  if (!currentTenant || !currentToken) {
-    setStatus("Please enter tenant name and API token.", "error");
-    return;
-  }
-
+  if (!currentTenant || !currentToken) { setStatus("Enter tenant and token.", "error"); return; }
   setStatus("Connecting to " + currentTenant + "...", "info");
-
   try {
     const data = await xcFetch("GET", "/api/web/namespaces/system/user_groups");
-    const groups = (data.items || [])
-      .map(g => g.name || (g.metadata && g.metadata.name))
-      .filter(Boolean)
-      .sort();
-
-    if (groups.length === 0) {
-      setStatus("Connected but no user groups found.", "error");
-      return;
-    }
-
+    const groups = (data.items || []).map(g => g.name || (g.metadata && g.metadata.name)).filter(Boolean).sort();
+    if (!groups.length) { setStatus("No groups found.", "error"); return; }
     const sel = document.getElementById("group");
     sel.innerHTML = "";
-    groups.forEach(g => {
-      const opt = document.createElement("option");
-      opt.value = g;
-      opt.textContent = g;
-      sel.appendChild(opt);
-    });
-
+    groups.forEach(g => { const o = document.createElement("option"); o.value = g; o.textContent = g; sel.appendChild(o); });
     document.getElementById("actions").style.display = "block";
-    setStatus("Connected to " + currentTenant + ". " + groups.length + " groups available.", "success");
-  } catch (e) {
-    setStatus("Connection failed: " + e.message, "error");
-  }
+    setStatus("Connected to " + currentTenant + ". " + groups.length + " groups.", "success");
+  } catch (e) { setStatus("Connection failed: " + e.message, "error"); }
 }
 
-// ============================================================
-// Run Action
-// ============================================================
 async function run() {
   const action = document.getElementById("action").value;
   const count = parseInt(document.getElementById("count").value) || 10;
   const group = document.getElementById("group").value;
-  const btn = document.getElementById("runBtn");
-
-  btn.disabled = true;
+  document.getElementById("runBtn").disabled = true;
   document.getElementById("results").innerHTML = "";
   setProgress(5);
-
   try {
-    if (action === "create") {
-      await doCreate(count, group);
-    } else if (action === "rotate") {
-      await doRotate(count, group);
-    } else {
-      await doDelete();
-    }
-  } catch (e) {
-    setStatus("Error: " + e.message, "error");
-  } finally {
-    setProgress(-1);
-    btn.disabled = false;
-  }
+    if (action === "create") await doCreate(count, group);
+    else if (action === "rotate") await doRotate(count, group);
+    else await doDelete();
+  } catch (e) { setStatus("Error: " + e.message, "error"); }
+  finally { setProgress(-1); document.getElementById("runBtn").disabled = false; }
 }
 
-// ============================================================
-// Create Users
-// ============================================================
 async function doCreate(count, group) {
   setStatus("Creating " + count + " users...", "info");
-  const created = [];
-  const errors = [];
-
+  const created = [], errors = [];
   for (let i = 1; i <= count; i++) {
-    setProgress(Math.round((i - 1) / count * 100));
-
-    const username = "user" + i + "-" + randomHex8();
-    const email = username + "@" + currentTenant + ".local";
-    const password = randomPassword(10);
-
+    setProgress(Math.round((i-1)/count*100));
+    const u = "user"+i+"-"+randomHex8(), e = u+"@"+currentTenant+".local", p = randomPassword(10);
     try {
-      await xcFetch("POST", "/api/web/custom/namespaces/system/user_roles", {
-        name: email,
-        namespace: "system",
-        type: "USER",
-        first_name: "User",
-        last_name: "" + i,
-        email: email,
-        idm_type: "VOLTERRA_MANAGED",
-        namespace_roles: [],
-        group_names: [group]
-      });
-      created.push({ index: i, username, email, password, group });
-    } catch (e) {
-      errors.push({ email, error: e.message });
-    }
+      await xcFetch("POST", "/api/web/custom/namespaces/system/user_roles", { name:e, namespace:"system", type:"USER", first_name:"User", last_name:""+i, email:e, idm_type:"VOLTERRA_MANAGED", namespace_roles:[], group_names:[group] });
+      created.push({index:i, username:u, email:e, password:p, group});
+    } catch(x) { errors.push({email:e, error:x.message}); }
   }
-
-  setProgress(100);
-  showResults(created, [], errors);
+  setProgress(100); showResults(created, [], errors);
 }
 
-// ============================================================
-// Rotate Passwords (Delete Old + Create New)
-// ============================================================
 async function doRotate(count, group) {
-  setStatus("Finding existing generated users...", "info");
-
-  const pattern = /^user\d+-[a-f0-9]{8}$/;
-  const data = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
-  const oldUsers = (data.items || []).filter(u => {
-    const email = u.email || u.name || "";
-    const uname = email.split("@")[0];
-    return pattern.test(uname);
-  });
-
-  const deleted = [];
-  const created = [];
-  const errors = [];
-  const total = oldUsers.length + count;
-
-  // Delete old users
-  if (oldUsers.length > 0) {
-    setStatus("Deleting " + oldUsers.length + " old users...", "info");
-    for (let i = 0; i < oldUsers.length; i++) {
-      setProgress(Math.round(i / total * 100));
-      const email = oldUsers[i].email || oldUsers[i].name;
-      try {
-        await xcFetch("POST", "/api/web/custom/namespaces/system/users/cascade_delete", {
-          email: email,
-          namespace: "system"
-        });
-        deleted.push(email);
-      } catch (e) {
-        errors.push({ email, error: e.message });
-      }
-    }
+  setStatus("Finding existing users...", "info");
+  const pat = /^user\d+-[a-f0-9]{8}$/;
+  const d = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
+  const old = (d.items||[]).filter(u => { const e=u.email||u.name||""; return pat.test(e.split("@")[0]); });
+  const deleted=[], created=[], errors=[], total=old.length+count;
+  if (old.length) {
+    setStatus("Deleting "+old.length+" old users...", "info");
+    for (let i=0; i<old.length; i++) { setProgress(Math.round(i/total*100)); const e=old[i].email||old[i].name; try { await xcFetch("POST","/api/web/custom/namespaces/system/users/cascade_delete",{email:e,namespace:"system"}); deleted.push(e); } catch(x) { errors.push({email:e,error:x.message}); } }
   }
-
-  // Create new users
-  setStatus("Creating " + count + " new users...", "info");
-  for (let i = 1; i <= count; i++) {
-    setProgress(Math.round((oldUsers.length + i - 1) / total * 100));
-
-    const username = "user" + i + "-" + randomHex8();
-    const email = username + "@" + currentTenant + ".local";
-    const password = randomPassword(10);
-
-    try {
-      await xcFetch("POST", "/api/web/custom/namespaces/system/user_roles", {
-        name: email,
-        namespace: "system",
-        type: "USER",
-        first_name: "User",
-        last_name: "" + i,
-        email: email,
-        idm_type: "VOLTERRA_MANAGED",
-        namespace_roles: [],
-        group_names: [group]
-      });
-      created.push({ index: i, username, email, password, group });
-    } catch (e) {
-      errors.push({ email, error: e.message });
-    }
-  }
-
-  setProgress(100);
-  showResults(created, deleted, errors);
+  setStatus("Creating "+count+" new users...", "info");
+  for (let i=1; i<=count; i++) { setProgress(Math.round((old.length+i-1)/total*100)); const u="user"+i+"-"+randomHex8(), e=u+"@"+currentTenant+".local", p=randomPassword(10); try { await xcFetch("POST","/api/web/custom/namespaces/system/user_roles",{name:e,namespace:"system",type:"USER",first_name:"User",last_name:""+i,email:e,idm_type:"VOLTERRA_MANAGED",namespace_roles:[],group_names:[group]}); created.push({index:i,username:u,email:e,password:p,group}); } catch(x) { errors.push({email:e,error:x.message}); } }
+  setProgress(100); showResults(created, deleted, errors);
 }
 
-// ============================================================
-// Delete Users
-// ============================================================
 async function doDelete() {
-  setStatus("Finding generated users...", "info");
-
-  const pattern = /^user\d+-[a-f0-9]{8}$/;
-  const data = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
-  const targets = (data.items || []).filter(u => {
-    const email = u.email || u.name || "";
-    const uname = email.split("@")[0];
-    return pattern.test(uname);
-  });
-
-  if (targets.length === 0) {
-    setStatus("No generated users found.", "info");
-    return;
-  }
-
-  if (!confirm("Delete " + targets.length + " generated users?\n\nThis cannot be undone.")) {
-    setStatus("Cancelled.", "info");
-    return;
-  }
-
-  const deleted = [];
-  const errors = [];
-
-  setStatus("Deleting " + targets.length + " users...", "info");
-  for (let i = 0; i < targets.length; i++) {
-    setProgress(Math.round(i / targets.length * 100));
-    const email = targets[i].email || targets[i].name;
-    try {
-      await xcFetch("POST", "/api/web/custom/namespaces/system/users/cascade_delete", {
-        email: email,
-        namespace: "system"
-      });
-      deleted.push(email);
-    } catch (e) {
-      errors.push({ email, error: e.message });
-    }
-  }
-
-  setProgress(100);
-  showResults([], deleted, errors);
+  setStatus("Finding users...", "info");
+  const pat = /^user\d+-[a-f0-9]{8}$/;
+  const d = await xcFetch("GET", "/api/web/custom/namespaces/system/user_roles");
+  const t = (d.items||[]).filter(u => { const e=u.email||u.name||""; return pat.test(e.split("@")[0]); });
+  if (!t.length) { setStatus("No generated users found.", "info"); return; }
+  if (!confirm("Delete "+t.length+" users?")) { setStatus("Cancelled.", "info"); return; }
+  const deleted=[], errors=[];
+  for (let i=0; i<t.length; i++) { setProgress(Math.round(i/t.length*100)); const e=t[i].email||t[i].name; try { await xcFetch("POST","/api/web/custom/namespaces/system/users/cascade_delete",{email:e,namespace:"system"}); deleted.push(e); } catch(x) { errors.push({email:e,error:x.message}); } }
+  setProgress(100); showResults([], deleted, errors);
 }
 
-// ============================================================
-// Display Results
-// ============================================================
 function showResults(created, deleted, errors) {
-  let html = "";
-
-  if (created.length > 0) {
-    html += "<h3 style='color:#155724;'>Created Users (" + created.length + ")</h3>";
-    html += "<table>";
-    html += "<tr><th>#</th><th>Email</th><th>Password</th><th>Group</th></tr>";
-    created.forEach(u => {
-      html += "<tr><td>" + u.index + "</td><td>" + u.email + "</td><td><code>" + u.password + "</code></td><td>" + u.group + "</td></tr>";
-    });
-    html += "</table>";
-  }
-
-  if (deleted.length > 0) {
-    html += "<h3 style='color:#856404;'>Deleted Users (" + deleted.length + ")</h3>";
-    html += "<ul>";
-    deleted.forEach(e => {
-      html += "<li>" + e + "</li>";
-    });
-    html += "</ul>";
-  }
-
-  if (errors.length > 0) {
-    html += "<h3 style='color:#721c24;'>Errors (" + errors.length + ")</h3>";
-    html += "<ul>";
-    errors.forEach(e => {
-      html += "<li><strong>" + e.email + "</strong>: " + e.error + "</li>";
-    });
-    html += "</ul>";
-  }
-
-  document.getElementById("results").innerHTML = html;
-
-  const c = created.length, d = deleted.length, e = errors.length;
-  const msg = "Done. Created: " + c + ", Deleted: " + d + ", Errors: " + e;
-  setStatus(msg, e > 0 ? "error" : "success");
+  let h = "";
+  if (created.length) { h += "<h3 style='color:#155724'>Created Users ("+created.length+")</h3><table><tr><th>#</th><th>Email</th><th>Password</th><th>Group</th></tr>"; created.forEach(u => { h += "<tr><td>"+u.index+"</td><td>"+u.email+"</td><td><code>"+u.password+"</code></td><td>"+u.group+"</td></tr>"; }); h += "</table>"; }
+  if (deleted.length) { h += "<h3 style='color:#856404'>Deleted ("+deleted.length+")</h3><ul>"; deleted.forEach(e => { h += "<li>"+e+"</li>"; }); h += "</ul>"; }
+  if (errors.length) { h += "<h3 style='color:#721c24'>Errors ("+errors.length+")</h3><ul>"; errors.forEach(e => { h += "<li><b>"+e.email+"</b>: "+e.error+"</li>"; }); h += "</ul>"; }
+  document.getElementById("results").innerHTML = h;
+  setStatus("Done. Created: "+created.length+", Deleted: "+deleted.length+", Errors: "+errors.length, errors.length ? "error" : "success");
 }
 </script>
 </body>
